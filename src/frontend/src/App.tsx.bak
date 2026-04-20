@@ -1,0 +1,1913 @@
+import {
+  ChevronDown,
+  Clock,
+  Instagram,
+  Mail,
+  MapPin,
+  Menu,
+  Phone,
+  X,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { SiFacebook, SiInstagram, SiWhatsapp } from "react-icons/si";
+
+// ─── Scroll helper ──────────────────────────────────────────────────────────
+const scrollTo = (id: string) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+};
+
+// ─── Fade-up animation variant ──────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fadeUp: any = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: "easeOut" as const },
+  },
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const stagger: any = { show: { transition: { staggerChildren: 0.1 } } };
+
+// ─── NAV LINKS ───────────────────────────────────────────────────────────────
+const NAV_LINKS = [
+  { label: "Home", id: "home" },
+  { label: "About", id: "about" },
+  { label: "Dining", id: "dining" },
+  { label: "Menu", id: "menu" },
+  { label: "Offers", id: "offers" },
+  { label: "Gallery", id: "gallery" },
+  { label: "Branches", id: "branches" },
+  { label: "Decorations", id: "decorations" },
+  { label: "Social", id: "social" },
+  { label: "Reviews", id: "reviews" },
+  { label: "Contact", id: "contact" },
+];
+
+// ─── MENU DATA ───────────────────────────────────────────────────────────────
+const MENU_CATEGORIES = [
+  { key: "fastFood", label: "Fast Food", emoji: "🍔" },
+  { key: "tandoori", label: "Tandoori", emoji: "🔥" },
+  { key: "sandwich", label: "Sandwiches", emoji: "🥪" },
+  { key: "friesSnacks", label: "Fries & Snacks", emoji: "🍟" },
+  { key: "soup", label: "Soups", emoji: "🍜" },
+  { key: "chaat", label: "Chaat", emoji: "🌽" },
+];
+
+type MenuItem = { name: string; desc: string; price: number };
+const MENU_ITEMS: Record<string, MenuItem[]> = {
+  fastFood: [
+    {
+      name: "Vada Pav",
+      desc: "Classic Mumbai street food — spiced potato fritter in a soft bun",
+      price: 30,
+    },
+    {
+      name: "Pav Bhaji",
+      desc: "Buttery spiced vegetable curry served with toasted pav",
+      price: 80,
+    },
+    {
+      name: "Veg Burger",
+      desc: "Crispy veggie patty with fresh veggies in a sesame bun",
+      price: 70,
+    },
+    {
+      name: "Paneer Frankie Roll",
+      desc: "Soft chapati rolled with spiced paneer and fresh vegetables",
+      price: 60,
+    },
+    {
+      name: "Aloo Tikki",
+      desc: "Crispy spiced potato patties with tangy chutneys",
+      price: 40,
+    },
+    {
+      name: "Cheese Veg Burger",
+      desc: "Classic veg burger loaded with melted cheese",
+      price: 90,
+    },
+  ],
+  tandoori: [
+    {
+      name: "Paneer Tikka",
+      desc: "Marinated paneer cubes grilled to perfection in tandoor",
+      price: 160,
+    },
+    {
+      name: "Tandoori Paneer Malai",
+      desc: "Creamy white paneer tikka with mild aromatic spices",
+      price: 180,
+    },
+    {
+      name: "Veg Seekh Kebab",
+      desc: "Seasoned vegetable kebab grilled on skewer in tandoor",
+      price: 140,
+    },
+    {
+      name: "Tandoori Roti",
+      desc: "Whole wheat flatbread baked in clay oven",
+      price: 15,
+    },
+    {
+      name: "Paneer Tikka Masala Skewer",
+      desc: "Paneer skewer coated with rich tandoori masala",
+      price: 170,
+    },
+    {
+      name: "Mushroom Tikka",
+      desc: "Juicy mushrooms marinated and grilled in tandoor",
+      price: 150,
+    },
+  ],
+  sandwich: [
+    {
+      name: "Grilled Veg Sandwich",
+      desc: "Toasted sandwich with seasoned vegetables and melted cheese",
+      price: 60,
+    },
+    {
+      name: "Club Sandwich",
+      desc: "Triple-decker toasted sandwich with fresh vegetables",
+      price: 100,
+    },
+    {
+      name: "Paneer Sandwich",
+      desc: "Soft paneer with herbs and spices in toasted bread",
+      price: 80,
+    },
+    {
+      name: "Corn Cheese Sandwich",
+      desc: "Sweet corn and melted cheese in golden toasted bread",
+      price: 70,
+    },
+    {
+      name: "Bombay Sandwich",
+      desc: "Mumbai-style layered sandwich with green chutney",
+      price: 50,
+    },
+    {
+      name: "Garlic Bread Sandwich",
+      desc: "Crispy garlic butter bread with herbs and cheese",
+      price: 80,
+    },
+  ],
+  friesSnacks: [
+    {
+      name: "Masala Fries",
+      desc: "Crispy fries tossed with chaat masala and coriander",
+      price: 70,
+    },
+    {
+      name: "Cheese Fries",
+      desc: "Golden fries topped with generous melted cheese sauce",
+      price: 90,
+    },
+    {
+      name: "Samosa (2 pcs)",
+      desc: "Crispy pastry filled with spiced potatoes and peas",
+      price: 50,
+    },
+    {
+      name: "Paneer Pakora",
+      desc: "Soft paneer pieces dipped in spiced chickpea batter",
+      price: 80,
+    },
+    {
+      name: "Onion Bhaji",
+      desc: "Crispy spiced onion fritters, a classic Indian snack",
+      price: 60,
+    },
+    {
+      name: "Mix Pakora Basket",
+      desc: "Assortment of crispy fried fritters for sharing",
+      price: 90,
+    },
+  ],
+  soup: [
+    {
+      name: "Tomato Soup",
+      desc: "Rich creamy tomato soup garnished with fresh cream",
+      price: 70,
+    },
+    {
+      name: "Sweet Corn Soup",
+      desc: "Thick comforting soup with sweet corn kernels",
+      price: 80,
+    },
+    {
+      name: "Mushroom Soup",
+      desc: "Earthy creamy mushroom soup with herbs",
+      price: 90,
+    },
+    {
+      name: "Hot & Sour Soup",
+      desc: "Indo-Chinese style bold and tangy broth with vegetables",
+      price: 80,
+    },
+    {
+      name: "Manchow Soup",
+      desc: "Spicy broth topped with crispy fried noodles",
+      price: 85,
+    },
+    {
+      name: "Lemon Coriander Soup",
+      desc: "Light refreshing soup with fresh lemon and coriander",
+      price: 75,
+    },
+  ],
+  chaat: [
+    {
+      name: "Pani Puri (6 pcs)",
+      desc: "Crispy hollow puris filled with spiced tamarind water",
+      price: 50,
+    },
+    {
+      name: "Bhel Puri",
+      desc: "Puffed rice tossed with vegetables, sev, and chutneys",
+      price: 60,
+    },
+    {
+      name: "Dahi Puri",
+      desc: "Puris filled with creamy yogurt, chutneys, and sev",
+      price: 70,
+    },
+    {
+      name: "Sev Puri",
+      desc: "Crispy puris topped with potatoes and crunchy sev",
+      price: 60,
+    },
+    {
+      name: "Ragda Pattice",
+      desc: "Crispy potato patties with white peas curry and chutneys",
+      price: 80,
+    },
+    {
+      name: "Aloo Chaat",
+      desc: "Crispy potatoes tossed with spices and tangy chutneys",
+      price: 60,
+    },
+  ],
+};
+
+// ─── REVIEWS DATA ────────────────────────────────────────────────────────────
+const REVIEWS = [
+  {
+    name: "Rakesh Malviya",
+    rating: 5,
+    date: "Jan 18, 2026",
+    comment:
+      "Bahut accha khana mila yahan. Paneer tikka bilkul fresh tha, aur service bhi fast thi. Mandsaur mein aisa restaurant chahiye tha. Zaroor aana chahiye!!",
+  },
+  {
+    name: "Sunita Rathore",
+    rating: 4,
+    date: "Jan 25, 2026",
+    comment:
+      "Cheese grilled sandwich bachon ko bahut pasand aayi. Jagah bhi saaf suthra hai. Price thoda aur kam hota to aur bhi badhiya hota, but overall kaafi satisfying experience raha.",
+  },
+  {
+    name: "Ankit Chouhan",
+    rating: 5,
+    date: "Feb 3, 2026",
+    comment:
+      "Masala chaap aur afghani chaap dono try kiye — dono zabardast the! Sweet corn soup bhi ghar jaisi thi. Mandsaur mein best veg option hai abhi.",
+  },
+  {
+    name: "Pooja Dangi",
+    rating: 4,
+    date: "Feb 11, 2026",
+    comment:
+      "Dahi puri aur cafe special sandwich dono fresh the. Family ke saath weekend mein aana kaafi achha laga. Thoda wait karna pada par khana worth it tha.",
+  },
+  {
+    name: "Nikhil Patidar",
+    rating: 5,
+    date: "Feb 19, 2026",
+    comment:
+      "Pehli baar gaya tha, mushroom tikka ne dil jeet liya. Manchow soup bhi garam garam mili. Staff bhi friendly hai. Doston ko zaroor recommend karunga!",
+  },
+  {
+    name: "Kavita Sharma",
+    rating: 4,
+    date: "Feb 28, 2026",
+    comment:
+      "Pure veg restaurant jo genuinely tasty khana de — yahi toh chahiye tha. Crispy corn chaat ekdum khatarnak hai. Ek baar aaye aur dobara aane ka mann karne laga.",
+  },
+  {
+    name: "Deepak Patidar",
+    rating: 5,
+    date: "Mar 5, 2026",
+    comment:
+      "Smiley mein khana khaya pehli baar — bilkul expectation se zyada nikla. Tandoori roti aur seekh kebab ka combination perfect tha. New collector road pe ek gem hai yeh jagah.",
+  },
+  {
+    name: "Priya Verma",
+    rating: 4,
+    date: "Mar 10, 2026",
+    comment:
+      "Ghar jaisa swad milta hai yahan. Tomato soup aur grilled sandwich ka combo sardi mein bahut hi badiya laga. Sitting arrangement bhi comfortable hai.",
+  },
+];
+
+const AVATAR_COLORS = [
+  "bg-green-100 text-green-700",
+  "bg-green-200 text-green-800",
+  "bg-blue-200 text-blue-800",
+  "bg-rose-200 text-rose-800",
+  "bg-green-200 text-green-800",
+  "bg-teal-200 text-teal-800",
+  "bg-orange-200 text-orange-800",
+  "bg-indigo-200 text-indigo-800",
+];
+
+// ─── NAVBAR ──────────────────────────────────────────────────────────────────
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  const textColor = "text-white";
+  const mutedColor = "text-white/80";
+
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        scrolled
+          ? "bg-[#16A34A]/95 backdrop-blur-md shadow-lg border-b border-green-600"
+          : "bg-transparent"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        {/* Logo */}
+        <button
+          type="button"
+          onClick={() => scrollTo("home")}
+          className="flex items-center gap-2 shrink-0"
+        >
+          <span className="text-2xl">🍽️</span>
+          <div className="text-left">
+            <div
+              className={`font-display font-bold text-sm leading-tight ${textColor}`}
+            >
+              Smiley Home Restaurant
+            </div>
+            <div className={`text-xs leading-tight ${mutedColor}`}>
+              Mandsaur
+            </div>
+          </div>
+        </button>
+
+        {/* Desktop nav links */}
+        <div className="hidden xl:flex items-center gap-1 flex-1 justify-center">
+          {NAV_LINKS.map((link) => (
+            <button
+              type="button"
+              key={link.id}
+              data-ocid="nav.link"
+              onClick={() => scrollTo(link.id)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-white/10 transition-colors ${textColor}`}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop right */}
+        <div className="hidden xl:flex items-center gap-3 shrink-0">
+          <a
+            href="tel:+919981716485"
+            className={`flex items-center gap-1.5 text-sm font-medium ${textColor} hover:opacity-80 transition-opacity`}
+          >
+            <Phone className="h-4 w-4" />
+            +91 99817 16485
+          </a>
+          <a
+            href="https://wa.me/919981716485"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="nav.primary_button"
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+          >
+            <SiWhatsapp className="h-4 w-4" />
+            Order
+          </a>
+        </div>
+
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          data-ocid="nav.toggle"
+          className={`xl:hidden p-2 rounded-lg ${textColor}`}
+          onClick={() => setMobileOpen(!mobileOpen)}
+        >
+          {mobileOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="xl:hidden bg-[#16A34A]/95 backdrop-blur-md border-b border-green-600"
+          >
+            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
+              {NAV_LINKS.map((link) => (
+                <button
+                  type="button"
+                  key={link.id}
+                  data-ocid="nav.link"
+                  onClick={() => {
+                    scrollTo(link.id);
+                    setMobileOpen(false);
+                  }}
+                  className="text-left px-3 py-2 text-sm font-medium text-white hover:bg-green-700 rounded-lg transition-colors"
+                >
+                  {link.label}
+                </button>
+              ))}
+              <div className="border-t border-border mt-2 pt-2 flex flex-col gap-2">
+                <a
+                  href="tel:+919981716485"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-foreground"
+                >
+                  <Phone className="h-4 w-4" />
+                  +91 99817 16485
+                </a>
+                <a
+                  href="https://wa.me/919981716485"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-ocid="nav.primary_button"
+                  className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold w-fit"
+                >
+                  <SiWhatsapp className="h-4 w-4" />
+                  Order on WhatsApp
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
+}
+
+// ─── HERO ────────────────────────────────────────────────────────────────────
+function HeroSection() {
+  const DOTS = [
+    { id: "d1", size: 6, top: "15%", left: "10%", anim: "float-1" },
+    { id: "d2", size: 8, top: "25%", left: "80%", anim: "float-2" },
+    { id: "d3", size: 4, top: "60%", left: "5%", anim: "float-3" },
+    { id: "d4", size: 10, top: "70%", left: "88%", anim: "float-1" },
+    { id: "d5", size: 5, top: "40%", left: "92%", anim: "float-2" },
+    { id: "d6", size: 7, top: "80%", left: "20%", anim: "float-3" },
+    { id: "d7", size: 4, top: "10%", left: "50%", anim: "float-1" },
+    { id: "d8", size: 6, top: "50%", left: "70%", anim: "float-2" },
+    { id: "d9", size: 8, top: "35%", left: "30%", anim: "float-3" },
+    { id: "d10", size: 5, top: "65%", left: "55%", anim: "float-1" },
+    { id: "d11", size: 9, top: "85%", left: "75%", anim: "float-2" },
+    { id: "d12", size: 4, top: "20%", left: "65%", anim: "float-3" },
+  ];
+
+  return (
+    <section
+      id="home"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    >
+      {/* Gradient background */}
+      <div
+        className="absolute inset-0 animate-ken-burns"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.18 0.04 55) 0%, oklch(0.35 0.08 55) 50%, oklch(0.52 0.13 55) 100%)",
+        }}
+      />
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/75 z-[1]" />
+
+      {/* Floating dots */}
+      {DOTS.map((dot) => (
+        <div
+          key={dot.id}
+          className={`absolute rounded-full bg-white/20 ${dot.anim} z-[2]`}
+          style={{
+            width: dot.size,
+            height: dot.size,
+            top: dot.top,
+            left: dot.left,
+          }}
+        />
+      ))}
+
+      {/* Logo badge top-left */}
+      <div className="absolute top-20 left-4 w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/40 bg-[#16A34A]/60 flex items-center justify-center text-3xl z-20">
+        🍽️
+      </div>
+
+      {/* Center content */}
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={stagger}
+        className="relative z-10 text-center px-4 max-w-4xl mx-auto"
+      >
+        <motion.div
+          variants={fadeUp}
+          className="inline-flex items-center gap-2 border border-white/30 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/90 text-sm mb-6"
+        >
+          🌿 First Boho Café in Mandsaur
+        </motion.div>
+
+        <motion.h1
+          variants={fadeUp}
+          className="font-display text-5xl sm:text-7xl font-bold text-white leading-tight mb-4"
+        >
+          Smiley Home Restaurant
+        </motion.h1>
+
+        <motion.p
+          variants={fadeUp}
+          className="text-[#22C55E] text-lg sm:text-xl font-medium mb-3"
+        >
+          100% Pure Vegetarian · Mandsaur, MP
+        </motion.p>
+
+        <motion.p
+          variants={fadeUp}
+          className="text-white/80 text-base sm:text-lg max-w-xl mx-auto mb-8"
+        >
+          The first Boho Café in Mandsaur — cozy, authentic, and unforgettable
+        </motion.p>
+
+        <motion.div
+          variants={fadeUp}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
+        >
+          <button
+            type="button"
+            data-ocid="hero.primary_button"
+            onClick={() => scrollTo("menu")}
+            className="bg-[#16A34A] hover:bg-[#15803D] text-white px-8 py-3 rounded-full font-semibold text-base transition-colors"
+          >
+            View Menu
+          </button>
+          <a
+            href="https://wa.me/919981716485"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="hero.secondary_button"
+            className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold text-base transition-colors"
+          >
+            <SiWhatsapp className="h-5 w-5" />
+            Order on WhatsApp
+          </a>
+        </motion.div>
+      </motion.div>
+
+      {/* Bouncing chevron */}
+      <motion.div
+        animate={{ y: [0, 10, 0] }}
+        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1.8 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+      >
+        <ChevronDown className="h-8 w-8 text-white/60" />
+      </motion.div>
+    </section>
+  );
+}
+
+// ─── ABOUT ───────────────────────────────────────────────────────────────────
+function AboutSection() {
+  return (
+    <section id="about" className="section-warm py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left */}
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            <motion.p
+              variants={fadeUp}
+              className="text-[#16A34A] uppercase tracking-widest text-sm font-semibold mb-3"
+            >
+              ✦ Our Story
+            </motion.p>
+            <motion.h2
+              variants={fadeUp}
+              className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-5 leading-tight"
+            >
+              A Café Born from <span className="text-gradient">Passion</span>
+            </motion.h2>
+            <motion.p
+              variants={fadeUp}
+              className="text-muted-foreground text-base mb-4"
+            >
+              Welcome to Smiley Home Restaurant – the first Boho Cafe in
+              Mandsaur.
+            </motion.p>
+            <motion.p
+              variants={fadeUp}
+              className="text-muted-foreground text-base mb-7"
+            >
+              We created this cafe to bring a cozy bohemian vibe where people
+              can relax, celebrate, and enjoy delicious food. Our cafe is
+              perfect for birthdays, anniversaries, surprise celebrations, and
+              romantic dinners. Every corner of our space is designed to create
+              memorable experiences.
+            </motion.p>
+            <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mb-7">
+              {[
+                {
+                  emoji: "🎂",
+                  title: "Celebrations",
+                  sub: "Birthdays & Anniversaries",
+                },
+                { emoji: "🌿", title: "100% Veg", sub: "Pure Vegetarian" },
+                {
+                  emoji: "✨",
+                  title: "Boho Ambiance",
+                  sub: "Unique Atmosphere",
+                },
+              ].map((chip) => (
+                <div
+                  key={chip.title}
+                  className="bg-card border border-border rounded-2xl px-4 py-3 shadow-xs flex items-center gap-2"
+                >
+                  <span className="text-xl">{chip.emoji}</span>
+                  <div>
+                    <div className="font-semibold text-sm text-foreground">
+                      {chip.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {chip.sub}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <a
+                href="https://wa.me/919981716485"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-ocid="about.primary_button"
+                className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full font-semibold transition-colors"
+              >
+                <SiWhatsapp className="h-5 w-5" />
+                Order on WhatsApp
+              </a>
+            </motion.div>
+          </motion.div>
+
+          {/* Right: photo placeholder */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative"
+          >
+            <div className="rounded-3xl border-4 border-green-300 shadow-warm-lg h-80 lg:h-[480px] bg-green-50 flex items-center justify-center overflow-hidden">
+              <div className="text-center">
+                <div className="text-6xl mb-3">📸</div>
+                <div className="text-green-500 font-medium">
+                  Photos Coming Soon
+                </div>
+              </div>
+            </div>
+            {/* Floating badge */}
+            <div className="absolute -bottom-4 left-6 bg-card border border-border rounded-2xl px-4 py-3 shadow-warm flex items-center gap-2">
+              <span className="text-2xl">🌿</span>
+              <div>
+                <div className="font-semibold text-sm text-foreground">
+                  Pure Veg
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  First Boho Experience in Mandsaur
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── DINING ──────────────────────────────────────────────────────────────────
+function DiningSection() {
+  const cards = [
+    {
+      icon: "🌿",
+      title: "Open Air Rooftop Dining",
+      desc: "Enjoy your meal under the open sky at our rooftop restaurant. Fresh air, beautiful ambiance, and delicious food — perfect for relaxed evenings with family and friends.",
+      tags: ["Open Air", "Rooftop", "Evening Dining"],
+    },
+    {
+      icon: "🏮",
+      title: "Indoor Theme Dining",
+      desc: "Immerse yourself in our beautifully themed indoor spaces. Boho-inspired décor, soft lighting, and a cozy atmosphere that makes every meal feel special.",
+      tags: ["Boho Décor", "AC Seating", "Theme Lighting"],
+    },
+    {
+      icon: "🎂",
+      title: "Private Celebration Dining",
+      desc: "Make your special moments unforgettable with our private dining setups. Perfect for birthdays, anniversaries, and surprise parties with personalized decoration.",
+      tags: ["Birthday", "Anniversary", "Private Setup"],
+    },
+  ];
+
+  return (
+    <section id="dining" className="section-warm py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.p
+            variants={fadeUp}
+            className="text-[#16A34A] uppercase tracking-widest text-sm font-semibold mb-3"
+          >
+            ✦ Dining Experiences
+          </motion.p>
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-4"
+          >
+            Every Visit, A New Experience
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="text-muted-foreground max-w-2xl mx-auto"
+          >
+            Discover our unique dining spaces — from open rooftop to cozy boho
+            interiors
+          </motion.p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {cards.map((card, i) => (
+            <motion.div
+              key={card.title}
+              data-ocid={`dining.item.${i + 1}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.55 }}
+              className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs hover:shadow-warm-lg transition-all hover:-translate-y-1"
+            >
+              <div className="h-48 bg-green-50 border-b-2 border-dashed border-green-200 flex flex-col items-center justify-center gap-2">
+                <span className="text-5xl">{card.icon}</span>
+                <span className="text-3xl">📸</span>
+                <span className="text-green-400 text-sm">
+                  Photo Coming Soon
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-display font-bold text-xl text-[#16A34A] mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-muted-foreground text-sm mb-4">
+                  {card.desc}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {card.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href="https://wa.me/919981716485?text=Hi!%20I'd%20like%20to%20book%20a%20dining%20experience%20at%20Smiley%20Home%20Restaurant."
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="dining.primary_button"
+            className="inline-flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white px-8 py-3 rounded-full font-semibold transition-colors"
+          >
+            📅 Book a Dining Experience
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── MENU ────────────────────────────────────────────────────────────────────
+function MenuSection() {
+  const [activeCategory, setActiveCategory] = useState("fastFood");
+
+  return (
+    <section id="menu" className="section-white py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-10"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            Our Menu
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            Fresh, pure vegetarian food made with love
+          </motion.p>
+        </motion.div>
+
+        {/* Category tabs */}
+        <div className="flex flex-wrap gap-2 justify-center mb-10">
+          {MENU_CATEGORIES.map((cat) => (
+            <button
+              type="button"
+              key={cat.key}
+              data-ocid="menu.tab"
+              onClick={() => setActiveCategory(cat.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeCategory === cat.key
+                  ? "bg-[#16A34A] text-white shadow-warm"
+                  : "bg-card border border-border text-foreground hover:bg-muted"
+              }`}
+            >
+              <span>{cat.emoji}</span>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Menu grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-10">
+          {(MENU_ITEMS[activeCategory] || []).map((item, i) => (
+            <motion.div
+              key={item.name}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+              className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs hover:shadow-warm transition-all hover:-translate-y-1"
+            >
+              <div className="h-44 bg-green-50 border-b-2 border-dashed border-green-200 flex flex-col items-center justify-center gap-1">
+                <span className="text-4xl">📸</span>
+                <span className="text-green-500 text-xs">
+                  Photo Coming Soon
+                </span>
+              </div>
+              <div className="p-4">
+                <h4 className="font-display font-semibold text-[#16A34A] text-sm leading-snug mb-1">
+                  {item.name}
+                </h4>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                  {item.desc}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#16A34A] font-bold text-lg">
+                    ₹{item.price}
+                  </span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                    Pure Veg
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href="https://wa.me/919981716485"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="menu.primary_button"
+            className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition-colors"
+          >
+            <SiWhatsapp className="h-5 w-5" />
+            Order on WhatsApp
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── OFFERS ──────────────────────────────────────────────────────────────────
+function OffersSection() {
+  const offers = [
+    {
+      icon: "🍕",
+      title: "Party Orders",
+      badge: "Catering",
+      badgeClass: "bg-blue-100 text-blue-700",
+      borderClass: "border-blue-200",
+      subtitle: "₹3,999 onward",
+      desc: "Customized party platters and bulk catering for all events in Mandsaur. Starting at ₹3,999 per event.",
+    },
+    {
+      icon: "🍽️",
+      title: "Free Unlimited Food",
+      badge: "Best Deal",
+      badgeClass: "bg-green-100 text-green-700",
+      borderClass: "border-green-200",
+      subtitle: "Only ₹299 per person",
+      desc: "Eat as much as you want — unlimited food for just ₹299 only! A full meal experience at the most affordable price in Mandsaur.",
+    },
+    {
+      icon: "🎉",
+      title: "Everyday New Offers",
+      badge: "Daily Surprise",
+      badgeClass: "bg-amber-100 text-amber-800",
+      borderClass: "border-green-200",
+      subtitle: "Fresh deals every day!",
+      desc: "We bring new offers and discounts every single day. Visit us or call to know today's special deal. Don't miss out!",
+    },
+  ];
+
+  return (
+    <section id="offers" className="section-warm py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            Special Offers
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            Exclusive deals just for our valued customers in Mandsaur
+          </motion.p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {offers.map((offer, i) => (
+            <motion.div
+              key={offer.title}
+              data-ocid={`offers.item.${i + 1}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.55 }}
+              className={`relative bg-card border-2 ${offer.borderClass} rounded-3xl p-7 shadow-xs hover:shadow-warm transition-all hover:-translate-y-1`}
+            >
+              <div
+                className={`absolute top-5 right-5 text-xs font-semibold px-3 py-1 rounded-full ${offer.badgeClass}`}
+              >
+                {offer.badge}
+              </div>
+              <div className="text-5xl mb-4">{offer.icon}</div>
+              <h3 className="font-display text-2xl font-bold text-[#16A34A] mb-1">
+                {offer.title}
+              </h3>
+              <p className="text-[#16A34A] font-semibold mb-3">
+                {offer.subtitle}
+              </p>
+              <p className="text-muted-foreground text-sm">{offer.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href="tel:+919981716485"
+            data-ocid="offers.primary_button"
+            className="inline-flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white px-8 py-3 rounded-full font-semibold transition-colors"
+          >
+            <Phone className="h-5 w-5" />
+            Call to Know Today's Offer: +91 99817 16485
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── GALLERY ─────────────────────────────────────────────────────────────────
+function GallerySection() {
+  const photos = [
+    { alt: "Smiley Restaurant Interior with Guests", h: "h-48" },
+    { alt: "Smiley Entrance at Night", h: "h-64" },
+    { alt: "Pizza with Salad and Drinks", h: "h-56" },
+    { alt: "Pasta with Meatballs", h: "h-72" },
+    { alt: "Full Food Spread", h: "h-52" },
+    { alt: "Outdoor Courtyard with Colorful Lights", h: "h-60" },
+    { alt: "Smiley Entrance Daytime", h: "h-44" },
+  ];
+
+  return (
+    <section id="gallery" className="section-white py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            📸 Our Gallery
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            Real photos from Smiley Home Restaurant, Mandsaur
+          </motion.p>
+        </motion.div>
+
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4 mb-10">
+          {photos.map((photo, i) => (
+            <motion.div
+              key={photo.alt}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className={`break-inside-avoid overflow-hidden rounded-xl shadow-md ${photo.h} bg-green-50 border-2 border-dashed border-green-200 flex flex-col items-center justify-center gap-2`}
+            >
+              <span className="text-4xl">📸</span>
+              <span className="text-green-500 text-sm font-medium">
+                Photo Coming Soon
+              </span>
+              <span className="text-[#22C55E] text-xs text-center px-4">
+                {photo.alt}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href="https://www.instagram.com/smiley_home_mandsaur?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="gallery.link"
+            className="inline-flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white px-8 py-3 rounded-full font-semibold transition-colors"
+          >
+            <SiInstagram className="h-5 w-5" />
+            Follow us on Instagram @smiley_home_mandsaur to see the latest
+            photos!
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── BRANCHES ────────────────────────────────────────────────────────────────
+function BranchesSection() {
+  const branches = [
+    {
+      icon: "🏠",
+      name: "Second Home Mandsaur",
+      city: "Mandsaur",
+      address: "Near Collectorate, Mandsaur, Madhya Pradesh 458001",
+      phone: "+91 95757 98248",
+      tel: "tel:+919575798248",
+      whatsapp: "https://wa.me/919575798248",
+      mapLink:
+        "https://maps.google.com/?q=Second+Home+Restaurant+Mandsaur+Madhya+Pradesh",
+      hours: "Mon–Sun: 11:00 AM – 11:00 PM",
+      features: [
+        "Rajasthani Cuisine",
+        "Dal Baati Churma",
+        "Rajasthani Thali",
+        "Rooftop Dining",
+        "Celebration Setup",
+        "Authentic Flavours",
+      ],
+      mapEmbed:
+        "https://maps.google.com/maps?q=Second+Home+Restaurant+Mandsaur+Madhya+Pradesh&output=embed&z=15",
+    },
+    {
+      icon: "🌿",
+      name: "Second Home Neemuch",
+      city: "Neemuch",
+      address: "Neemuch, Madhya Pradesh 458441",
+      phone: "+91 72258 98248",
+      tel: "tel:+917225898248",
+      whatsapp: "https://wa.me/917225898248",
+      mapLink:
+        "https://maps.google.com/?q=Second+Home+Neemuch+Madhya+Pradesh+458441",
+      hours: "Mon–Sun: 11:00 AM – 11:00 PM",
+      features: [
+        "Rajasthani Cuisine",
+        "Dal Baati Churma",
+        "Rajasthani Thali",
+        "Dine In",
+        "Takeaway",
+        "Authentic Flavours",
+      ],
+      mapEmbed:
+        "https://maps.google.com/maps?q=Second+Home+Neemuch+Madhya+Pradesh+458441&output=embed&z=15",
+    },
+  ];
+
+  return (
+    <section id="branches" className="section-white py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.p
+            variants={fadeUp}
+            className="text-[#16A34A] uppercase tracking-widest text-sm font-semibold mb-3"
+          >
+            ✦ Our Locations
+          </motion.p>
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            Visit Our Branches
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            Two locations serving Mandsaur and Neemuch
+          </motion.p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {branches.map((b, i) => (
+            <motion.div
+              key={b.name}
+              data-ocid={`branches.item.${i + 1}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15 }}
+              className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs hover:shadow-warm transition-all"
+            >
+              <div className="h-48 bg-green-50 border-b-2 border-dashed border-green-200 flex flex-col items-center justify-center gap-2">
+                <span className="text-5xl">{b.icon}</span>
+                <span className="text-3xl">📸</span>
+                <span className="text-green-400 text-sm">
+                  Photo Coming Soon
+                </span>
+              </div>
+              <div className="p-6">
+                <h3 className="font-display text-xl font-bold text-[#16A34A] mb-1">
+                  {b.name}
+                </h3>
+                <p className="text-muted-foreground text-sm mb-3">{b.city}</p>
+                <div className="flex items-start gap-2 mb-2">
+                  <MapPin className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-foreground">{b.address}</span>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className="h-4 w-4 text-green-500 shrink-0" />
+                  <span className="text-sm text-foreground">{b.hours}</span>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {b.features.map((f) => (
+                    <span
+                      key={f}
+                      className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-3 mb-5">
+                  <a
+                    href={b.tel}
+                    className="flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                  >
+                    <Phone className="h-4 w-4" /> Call
+                  </a>
+                  <a
+                    href={b.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                  >
+                    <SiWhatsapp className="h-4 w-4" /> WhatsApp
+                  </a>
+                </div>
+                <iframe
+                  src={b.mapEmbed}
+                  className="w-full h-48 rounded-xl border border-border"
+                  loading="lazy"
+                  allowFullScreen
+                  title={b.name}
+                />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── DECORATIONS ─────────────────────────────────────────────────────────────
+function DecorationsSection() {
+  const decorations = [
+    {
+      icon: "🎂",
+      title: "Birthday Decoration",
+      desc: "Make birthdays magical with balloons, banners, personalized messages, and themed setups. Perfect surprise arrangements for your loved ones.",
+      tags: ["Balloons", "Banners", "Themed", "Surprise Setup"],
+      price: "Starting ₹499",
+      border: "border-pink-200 hover:border-pink-400",
+    },
+    {
+      icon: "💑",
+      title: "Anniversary / Romantic Décor",
+      desc: "Roses, candles, fairy lights, and personalized setups for the most romantic evening. Let us create a magical atmosphere for your special day.",
+      tags: ["Rose Petals", "Candle Light", "Fairy Lights", "Personalized"],
+      price: "Starting ₹699",
+      border: "border-red-200 hover:border-red-400",
+    },
+    {
+      icon: "🌹",
+      title: "Proposal Setup",
+      desc: "Plan the perfect proposal with our romantic setup — rose arch, message boards, candles, and a setting that ensures a YES!",
+      tags: ["Rose Arch", "Message Board", "Exclusive Setup"],
+      price: "Starting ₹999",
+      border: "border-rose-200 hover:border-rose-400",
+    },
+    {
+      icon: "🎊",
+      title: "Party & Event Décor",
+      desc: "Full event decoration for kitty parties, reunions, farewell parties, and special occasions. We handle everything from setup to cleanup.",
+      tags: ["Full Décor", "Theme Lighting", "Table Setup"],
+      price: "Starting ₹1,499",
+      border: "border-green-200 hover:border-green-400",
+    },
+    {
+      icon: "👶",
+      title: "Baby Shower & Gender Reveal",
+      desc: "Celebrate the arrival of new life with cute, pastel-themed decorations, balloon installations, and heartwarming setups.",
+      tags: ["Pastel Theme", "Balloon Setup", "Photo Backdrop"],
+      price: "Starting ₹799",
+      border: "border-blue-200 hover:border-blue-400",
+    },
+    {
+      icon: "🏆",
+      title: "Custom Themed Décor",
+      desc: "Have a specific theme in mind? We'll bring your vision to life — Bollywood, Royal, Rustic Boho, Floral, or anything you imagine!",
+      tags: ["Custom Theme", "Any Occasion", "Fully Personalized"],
+      price: "Price on Request",
+      border: "border-amber-200 hover:border-amber-400",
+    },
+  ];
+
+  return (
+    <section id="decorations" className="section-warm py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.p
+            variants={fadeUp}
+            className="text-[#16A34A] uppercase tracking-widest text-sm font-semibold mb-3"
+          >
+            ✦ Decoration Services
+          </motion.p>
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            Make Every Moment Special
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="text-muted-foreground max-w-xl mx-auto"
+          >
+            Beautiful decorations for every occasion — birthdays, anniversaries,
+            proposals & more
+          </motion.p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {decorations.map((d, i) => (
+            <motion.div
+              key={d.title}
+              data-ocid={`decorations.item.${i + 1}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className={`bg-card border-2 ${d.border} rounded-3xl overflow-hidden shadow-xs hover:shadow-warm-lg transition-all hover:-translate-y-1`}
+            >
+              <div className="h-44 bg-green-50 border-b-2 border-dashed border-green-200 flex flex-col items-center justify-center gap-2">
+                <span className="text-5xl">{d.icon}</span>
+                <span className="text-3xl">📸</span>
+                <span className="text-green-400 text-xs">
+                  Photo Coming Soon
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-display font-bold text-lg text-[#16A34A] mb-2">
+                  {d.title}
+                </h3>
+                <p className="text-muted-foreground text-sm mb-3">{d.desc}</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {d.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#16A34A] font-bold text-sm">
+                    {d.price}
+                  </span>
+                  <a
+                    href="https://wa.me/919981716485"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded-full font-semibold transition-colors"
+                  >
+                    Book Now
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <a
+            href="https://wa.me/919981716485?text=Hi!%20I'd%20like%20to%20enquire%20about%20decoration%20packages%20at%20Smiley%20Home%20Restaurant."
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="decorations.primary_button"
+            className="inline-flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white px-8 py-3 rounded-full font-semibold transition-colors"
+          >
+            🎀 Enquire About Decorations
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SOCIAL ──────────────────────────────────────────────────────────────────
+function SocialSection() {
+  const socials = [
+    {
+      Icon: SiInstagram,
+      platform: "Instagram",
+      handle: "@smiley_home_mandsaur",
+      href: "https://www.instagram.com/smiley_home_mandsaur?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+      gradient: "from-green-500 to-pink-500",
+      handleColor: "text-pink-600",
+      btnClass: "bg-gradient-to-r from-green-500 to-pink-500 hover:opacity-90",
+      desc: "Daily food photos, decor setups, and behind-the-scenes moments. Follow us to never miss an update!",
+      cta: "Follow on Instagram",
+    },
+    {
+      Icon: SiFacebook,
+      platform: "Facebook",
+      handle: "Smiley Home Restaurant",
+      href: "https://www.facebook.com/share/17BCyQKC2H/",
+      gradient: "from-blue-600 to-blue-400",
+      handleColor: "text-blue-600",
+      btnClass: "bg-blue-600 hover:bg-blue-700",
+      desc: "Event updates, special offers, and community posts. Like our page for the latest news and deals!",
+      cta: "Like on Facebook",
+    },
+    {
+      Icon: SiWhatsapp,
+      platform: "WhatsApp",
+      handle: "+91 99817 16485",
+      href: "https://wa.me/919981716485",
+      gradient: "from-green-500 to-green-400",
+      handleColor: "text-green-600",
+      btnClass: "bg-green-500 hover:bg-green-600",
+      desc: "Chat with us directly for orders, reservations, and decoration bookings. We respond instantly!",
+      cta: "Chat on WhatsApp",
+    },
+  ];
+
+  return (
+    <section id="social" className="section-white py-20 lg:py-28">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.p
+            variants={fadeUp}
+            className="text-[#16A34A] uppercase tracking-widest text-sm font-semibold mb-3"
+          >
+            ✦ Stay Connected
+          </motion.p>
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            Follow Us on Social Media
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            Stay updated with our latest offers, events, and food photos
+          </motion.p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-3 gap-6">
+          {socials.map((s, i) => (
+            <motion.div
+              key={s.platform}
+              data-ocid={`social.item.${i + 1}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs hover:shadow-warm-lg transition-all hover:-translate-y-1"
+            >
+              <div
+                className={`h-32 bg-gradient-to-br ${s.gradient} flex items-center justify-center`}
+              >
+                <s.Icon className="h-12 w-12 text-white" />
+              </div>
+              <div className="p-5">
+                <h3 className="font-display font-bold text-xl text-[#16A34A] mb-1">
+                  {s.platform}
+                </h3>
+                <p className={`text-sm font-semibold ${s.handleColor} mb-3`}>
+                  {s.handle}
+                </p>
+                <p className="text-muted-foreground text-sm mb-4">{s.desc}</p>
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center gap-2 ${s.btnClass} text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all`}
+                >
+                  {s.cta}
+                </a>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── REVIEWS ─────────────────────────────────────────────────────────────────
+function ReviewsSection() {
+  return (
+    <section id="reviews" className="section-warm py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            ⭐ Customer Reviews
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            What our happy customers say
+          </motion.p>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {REVIEWS.map((review, i) => {
+            const initials = review.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("");
+            const colorClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
+            return (
+              <motion.div
+                key={review.name}
+                data-ocid={`reviews.item.${i + 1}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+                className="bg-card border border-border rounded-2xl p-5 shadow-xs hover:shadow-warm transition-all"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${colorClass}`}
+                  >
+                    {initials}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-foreground">
+                      {review.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {review.date}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-0.5 mb-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={
+                        star <= review.rating
+                          ? "text-yellow-400"
+                          : "text-gray-300"
+                      }
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {review.comment}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── CONTACT ─────────────────────────────────────────────────────────────────
+function ContactSection() {
+  const [form, setForm] = useState({ name: "", phone: "", message: "" });
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  const handleWhatsApp = () => {
+    const text = encodeURIComponent(
+      `Name: ${form.name}\nPhone: ${form.phone}\n\n${form.message}`,
+    );
+    window.open(`https://wa.me/919981716485?text=${text}`, "_blank");
+  };
+
+  const infoItems = [
+    {
+      icon: "📍",
+      label: "Address",
+      value:
+        "New Collector Road, Opposite D-Mart, Mandsaur, Madhya Pradesh 458001",
+      href: "https://maps.google.com/?q=Smiley+Home+Restaurant+Mandsaur",
+    },
+    {
+      icon: "📞",
+      label: "Phone",
+      value: "+91 99817 16485",
+      href: "tel:+919981716485",
+    },
+    {
+      icon: "💬",
+      label: "WhatsApp",
+      value: "Order on WhatsApp",
+      href: "https://wa.me/919981716485",
+    },
+    {
+      icon: "✉️",
+      label: "Email",
+      value: "smileyhomerestaurant@gmail.com",
+      href: "mailto:smileyhomerestaurant@gmail.com",
+    },
+    {
+      icon: "📸",
+      label: "Instagram",
+      value: "@smiley_home_mandsaur",
+      href: "https://www.instagram.com/smiley_home_mandsaur?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+    },
+    {
+      icon: "🕐",
+      label: "Hours",
+      value: "Mon-Sun: 11:00 AM – 11:00 PM",
+      href: null,
+    },
+  ];
+
+  return (
+    <section id="contact" className="section-white py-20 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-12"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="font-display text-4xl lg:text-5xl font-bold text-[#16A34A] mb-3"
+          >
+            📍 Find Us & Contact
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground">
+            Visit us in Mandsaur or reach out — we're always happy to hear from
+            you!
+          </motion.p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* Left */}
+          <div>
+            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+              {infoItems.map((item, i) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.07 }}
+                  className="bg-card border border-border rounded-2xl p-4 shadow-xs"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">{item.icon}</span>
+                    <div>
+                      <div className="text-xs text-muted-foreground font-medium mb-0.5">
+                        {item.label}
+                      </div>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          data-ocid="contact.link"
+                          className="text-sm text-foreground hover:text-[#16A34A] transition-colors font-medium"
+                          target={
+                            item.href.startsWith("http") ? "_blank" : undefined
+                          }
+                          rel={
+                            item.href.startsWith("http")
+                              ? "noopener noreferrer"
+                              : undefined
+                          }
+                        >
+                          {item.value}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-foreground font-medium">
+                          {item.value}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Contact form */}
+            <div className="bg-card border border-border rounded-3xl p-6 shadow-xs">
+              <h3 className="font-display text-xl font-bold text-[#16A34A] mb-5">
+                Send Us a Message
+              </h3>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label
+                    htmlFor="contact-name"
+                    className="text-sm font-medium text-foreground mb-1.5 block"
+                  >
+                    Your Name
+                  </label>
+                  <input
+                    id="contact-name"
+                    ref={nameRef}
+                    data-ocid="contact.input"
+                    type="text"
+                    placeholder="Enter your name"
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, name: e.target.value }))
+                    }
+                    className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="contact-phone"
+                    className="text-sm font-medium text-foreground mb-1.5 block"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    id="contact-phone"
+                    data-ocid="contact.input"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={form.phone}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, phone: e.target.value }))
+                    }
+                    className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="contact-message"
+                    className="text-sm font-medium text-foreground mb-1.5 block"
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    data-ocid="contact.textarea"
+                    rows={4}
+                    placeholder="Your message or order details..."
+                    value={form.message}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, message: e.target.value }))
+                    }
+                    className="w-full border border-border rounded-xl px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-[#16A34A]/30 resize-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  data-ocid="contact.submit_button"
+                  onClick={handleWhatsApp}
+                  className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition-colors"
+                >
+                  <SiWhatsapp className="h-5 w-5" />
+                  Send via WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Map */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <iframe
+              src="https://maps.google.com/maps?q=Smiley+Home+Restaurant+New+Collector+Road+Mandsaur+Madhya+Pradesh&output=embed&z=17"
+              className="rounded-3xl overflow-hidden border-2 border-border shadow-warm-lg w-full min-h-[400px] h-[500px] lg:h-auto lg:min-h-full"
+              loading="lazy"
+              allowFullScreen
+              title="Smiley Home Restaurant Location"
+            />
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FOOTER ──────────────────────────────────────────────────────────────────
+function Footer() {
+  const year = new Date().getFullYear();
+  const hostname =
+    typeof window !== "undefined" ? window.location.hostname : "";
+
+  return (
+    <footer style={{ background: "#16A34A" }} className="text-white py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Center content */}
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-3xl">🍽️</span>
+            <span className="font-display text-2xl font-bold">
+              Smiley Home Restaurant
+            </span>
+          </div>
+          <p className="text-white/70 text-sm mb-1">
+            The first Boho Café in Mandsaur
+          </p>
+          <p className="text-white/60 text-xs mb-4">
+            100% Pure Vegetarian · Neemuch & Mandsaur, MP
+          </p>
+          <a
+            href="tel:+919981716485"
+            data-ocid="footer.link"
+            className="text-[#22C55E] hover:text-amber-300 font-medium transition-colors mb-6"
+          >
+            📞 +91 99817 16485
+          </a>
+
+          {/* Social icons */}
+          <div className="flex items-center gap-5 mb-6">
+            <a
+              href="https://www.instagram.com/smiley_home_mandsaur?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+              target="_blank"
+              rel="noopener noreferrer"
+              data-ocid="footer.link"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-pink-600 transition-colors"
+            >
+              <SiInstagram className="h-5 w-5" />
+            </a>
+            <a
+              href="https://www.facebook.com/share/17BCyQKC2H/"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-ocid="footer.link"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-blue-600 transition-colors"
+            >
+              <SiFacebook className="h-5 w-5" />
+            </a>
+            <a
+              href="https://wa.me/919981716485"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-ocid="footer.link"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-green-600 transition-colors"
+            >
+              <SiWhatsapp className="h-5 w-5" />
+            </a>
+          </div>
+
+          {/* Nav links */}
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-8">
+            {NAV_LINKS.map((link) => (
+              <button
+                type="button"
+                key={link.id}
+                data-ocid="footer.link"
+                onClick={() => scrollTo(link.id)}
+                className="text-white/60 hover:text-white text-sm transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-white/50 text-sm">
+            © {year} Smiley Home Restaurant, Mandsaur. All rights reserved.
+          </p>
+          <a
+            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(hostname)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-ocid="footer.link"
+            className="text-white/40 hover:text-white/70 text-xs transition-colors"
+          >
+            Built with ❤️ using caffeine.ai
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <div className="font-body">
+      <Navbar />
+      <main>
+        <HeroSection />
+        <AboutSection />
+        <DiningSection />
+        <MenuSection />
+        <OffersSection />
+        <GallerySection />
+        <BranchesSection />
+        <DecorationsSection />
+        <SocialSection />
+        <ReviewsSection />
+        <ContactSection />
+      </main>
+      <Footer />
+    </div>
+  );
+}
